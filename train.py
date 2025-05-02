@@ -4,21 +4,26 @@
         - For better flexibility, consider using LightningCLI in PyTorch Lightning
 """
 # PyTorch & Pytorch Lightning
+
+import src.config as cfg
+
 from lightning.pytorch.loggers.wandb import WandbLogger
 from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning import Trainer
 import torch
 
+# EarlyStopping 
+from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
+
 # Custom packages
 from src.dataset import TinyImageNetDatasetModule
 from src.network import SimpleClassifier
-import src.config as cfg
 
 torch.set_float32_matmul_precision('medium')
 
 
 if __name__ == "__main__":
-
+    
     model = SimpleClassifier(
         model_name = cfg.MODEL_NAME,
         num_classes = cfg.NUM_CLASSES,
@@ -33,7 +38,7 @@ if __name__ == "__main__":
     wandb_logger = WandbLogger(
         project = cfg.WANDB_PROJECT,
         save_dir = cfg.WANDB_SAVE_DIR,
-        entity = cfg.WANDB_ENTITY,
+        entity   = " ", # Put Your ID
         name = cfg.WANDB_NAME,
     )
 
@@ -47,6 +52,12 @@ if __name__ == "__main__":
         callbacks = [
             LearningRateMonitor(logging_interval='epoch'),
             ModelCheckpoint(save_top_k=1, monitor='accuracy/val', mode='max'),
+            EarlyStopping(
+                monitor='accuracy/val',  
+                mode='max',           
+                patience=5,           
+                verbose=True          
+            )
         ],
     )
 

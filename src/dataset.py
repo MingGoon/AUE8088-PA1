@@ -41,13 +41,20 @@ class TinyImageNetDatasetModule(LightningDataModule):
 
     def train_dataloader(self):
         tf_train = transforms.Compose([
-            transforms.RandomRotation(cfg.IMAGE_ROTATION),
-            transforms.RandomHorizontalFlip(cfg.IMAGE_FLIP_PROB),
-            transforms.RandomCrop(cfg.IMAGE_NUM_CROPS, padding=cfg.IMAGE_PAD_CROPS),
+        # 1) 무작위로 크롭 & 리사이즈
+            transforms.RandomResizedCrop(64, scale=(0.8, 1.0)),
+        # 2) 좌우 뒤집기
+            transforms.RandomHorizontalFlip(0.5),
+        # 3) 색상 밝기·대비·채도 랜덤 변화
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+        # 4) 텐서 변환 & 정규화
             transforms.ToTensor(),
             transforms.Normalize(cfg.IMAGE_MEAN, cfg.IMAGE_STD),
         ])
-        dataset = ImageFolder(os.path.join(cfg.DATASET_ROOT_PATH, self.__DATASET_NAME__, 'train'), tf_train)
+        dataset = ImageFolder(
+            os.path.join(cfg.DATASET_ROOT_PATH, self.__DATASET_NAME__, 'train'),
+            tf_train
+        )
         msg = f"[Train]\t root dir: {dataset.root}\t | # of samples: {len(dataset):,}"
         print(colored(msg, color='blue', attrs=('bold',)))
 
